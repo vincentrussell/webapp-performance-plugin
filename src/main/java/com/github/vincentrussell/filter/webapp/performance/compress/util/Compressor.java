@@ -13,7 +13,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 public class Compressor {
 
     private String charset = "UTF-8";
-    private int linebreakPosition = -1 ;
+    private int linebreakPosition = -1;
     private boolean munge = false;
     private boolean verbose  = false;
     private boolean preserveAllSemiColons = false;
@@ -21,18 +21,19 @@ public class Compressor {
 
 
     public void compressJs(Collection<File> files, OutputStream outputStream) throws IOException {
-        for (File file : files) {
-            JavaScriptCompressor compressor = new JavaScriptCompressor(new FileReader(file),new DefaultErrorReporter(file));
-            try (Writer writer = new OutputStreamWriter(outputStream, charset)) {
+        try (Writer writer = new OutputStreamWriter(outputStream, charset)) {
+            for (File file : files) {
+                JavaScriptCompressor compressor = new JavaScriptCompressor(new FileReader(file),new DefaultErrorReporter(file));
                 compressor.compress(writer, linebreakPosition,munge,verbose,preserveAllSemiColons,disableOptimizations);
             }
         }
+
     }
 
     public void compressCss(Collection<File> files, OutputStream outputStream) throws IOException {
-        for (File file : files) {
-            CssCompressor compressor = new CssCompressor(new FileReader(file));
-            try (Writer writer = new OutputStreamWriter(outputStream, charset)) {
+        try (Writer writer = new OutputStreamWriter(outputStream, charset)) {
+            for (File file : files) {
+                CssCompressor compressor = new CssCompressor(new FileReader(file));
                 compressor.compress(writer, linebreakPosition);
             }
         }

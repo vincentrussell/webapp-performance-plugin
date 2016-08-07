@@ -9,10 +9,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -28,6 +25,7 @@ public class CompressorTest {
     File comment_css;
     File float_js;
     File string_combo_js;
+    File outputFile;
 
     @Before
     public void before() throws IOException {
@@ -36,15 +34,18 @@ public class CompressorTest {
         comment_css = copyFromResourcesToFile("css/comment.css");
         float_js = copyFromResourcesToFile("js/float.js");
         string_combo_js = copyFromResourcesToFile("js/string_combo.js");
+        outputFile = temporaryFolder.newFile();
     }
 
     @Test
     public void compressCssOneFile() throws IOException {
         Compressor compressor = new Compressor.Builder()
                 .build();
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            compressor.compressCss(Arrays.asList(zeros_css),byteArrayOutputStream );
-            Approvals.verify(byteArrayOutputStream.toString("UTF-8"), getApprovalPath("zeros_css"));
+        try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
+            compressor.compressCss(Arrays.asList(zeros_css),fileOutputStream );
+        }
+        try (FileInputStream fileInputStream = new FileInputStream(outputFile)) {
+            Approvals.verify(IOUtils.toString(fileInputStream,"UTF-8"), getApprovalPath("zeros_css"));
         }
     }
 
@@ -52,9 +53,11 @@ public class CompressorTest {
     public void compressCssTwoFiles() throws IOException {
         Compressor compressor = new Compressor.Builder()
                 .build();
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            compressor.compressCss(Arrays.asList(zeros_css, comment_css),byteArrayOutputStream );
-            Approvals.verify(byteArrayOutputStream.toString("UTF-8"), getApprovalPath("zeros_and_comment_css"));
+        try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
+            compressor.compressCss(Arrays.asList(zeros_css, comment_css),fileOutputStream );
+        }
+        try (FileInputStream fileInputStream = new FileInputStream(outputFile)) {
+            Approvals.verify(IOUtils.toString(fileInputStream,"UTF-8"), getApprovalPath("zeros_and_comment_css"));
         }
     }
 
@@ -62,9 +65,11 @@ public class CompressorTest {
     public void compressJsOneFile() throws IOException {
         Compressor compressor = new Compressor.Builder()
                 .build();
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            compressor.compressJs(Arrays.asList(string_combo_js),byteArrayOutputStream );
-            Approvals.verify(byteArrayOutputStream.toString("UTF-8"), getApprovalPath("string_js"));
+        try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
+            compressor.compressJs(Arrays.asList(string_combo_js),fileOutputStream );
+        }
+        try (FileInputStream fileInputStream = new FileInputStream(outputFile)) {
+            Approvals.verify(IOUtils.toString(fileInputStream,"UTF-8"), getApprovalPath("string_js"));
         }
     }
 
@@ -72,9 +77,11 @@ public class CompressorTest {
     public void compressJsTwoJsFiles() throws IOException {
         Compressor compressor = new Compressor.Builder()
                 .build();
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            compressor.compressJs(Arrays.asList(string_combo_js,float_js),byteArrayOutputStream );
-            Approvals.verify(byteArrayOutputStream.toString("UTF-8"), getApprovalPath("string_float_js"));
+        try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
+            compressor.compressJs(Arrays.asList(string_combo_js,float_js),fileOutputStream );
+        }
+        try (FileInputStream fileInputStream = new FileInputStream(outputFile)) {
+            Approvals.verify(IOUtils.toString(fileInputStream,"UTF-8"), getApprovalPath("string_float_js"));
         }
     }
 
