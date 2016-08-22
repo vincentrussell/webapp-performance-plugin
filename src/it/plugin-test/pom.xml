@@ -1,0 +1,72 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>perf-war</packaging>
+
+    <groupId>@project.groupId@</groupId>
+    <artifactId>@project.artifactId@-test</artifactId>
+    <version>@project.version@</version>
+
+    <description>A simple IT verifying the basic use case.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>19.0</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>@project.groupId@</groupId>
+                    <artifactId>@project.artifactId@</artifactId>
+                    <version>@project.version@</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <bundles>
+                            <jsBundle>
+                                <name>bundle1</name>
+                                <javascriptFiles>
+                                    <javascriptFile>${project.basedir}/src/main/webapp/js/float.js</javascriptFile>
+                                    <javascriptFile>${project.basedir}/src/main/webapp/js/string_combo.js</javascriptFile>
+                                </javascriptFiles>
+                            </jsBundle>
+                            <cssBundle>
+                                <name>bundle2</name>
+                                <cssFiles>
+                                    <cssFile>${project.basedir}/src/main/webapp/css/comment.css</cssFile>
+                                    <cssFile>${project.basedir}/src/main/webapp/css/zeros.css</cssFile>
+                                </cssFiles>
+                            </cssBundle>
+                        </bundles>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>create-war-with-bundles</id>
+                            <goals>
+                                <goal>war</goal>
+                            </goals>
+                            <phase>package</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+
+        <plugins>
+            <plugin>
+                <groupId>@project.groupId@</groupId>
+                <artifactId>@project.artifactId@</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
