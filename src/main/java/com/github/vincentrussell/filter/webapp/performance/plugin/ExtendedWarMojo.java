@@ -3,22 +3,32 @@ package com.github.vincentrussell.filter.webapp.performance.plugin;
 import com.github.vincentrussell.filter.webapp.performance.ConfigurationProperties;
 import com.github.vincentrussell.filter.webapp.performance.compress.util.Compressor;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.handler.ArtifactHandler;
+import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.model.Dependency;
-import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.war.WarMojo;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.*;
+import org.eclipse.aether.util.artifact.JavaScopes;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,6 +39,28 @@ public class ExtendedWarMojo extends WarMojo {
 
     public static final String JS_BUNDLES = "jsBundles";
     public static final String CSS_BUNDLES = "cssBundles";
+
+    private static ArtifactHandler JAVA_ARTIFACT_HANDLER = new DefaultArtifactHandler("jar") {
+        @Override
+        public String getExtension() {
+            return "jar";
+        }
+
+        @Override
+        public String getType() {
+            return "jar";
+        }
+
+        @Override
+        public String getLanguage() {
+            return "java";
+        }
+
+        @Override
+        public boolean isAddedToClasspath() {
+            return true;
+        }
+    };
 
     @Parameter(property = "bundles", required = true)
     protected Bundle[] bundles = new Bundle[0];
@@ -61,13 +93,20 @@ public class ExtendedWarMojo extends WarMojo {
     private ArtifactRepository localRepository;
 
     @Component
-    private ArtifactFactory artifactFactory;
-
-    @Component
     private MavenSession mavenSession;
 
     @Component
-    private BuildPluginManager pluginManager;
+    private ArtifactResolver artifactResolver;
+
+
+    @Component
+    private RepositorySystem repoSystem = null;
+
+    @Parameter( defaultValue = "${repositorySystemSession}", readonly = true )
+    private RepositorySystemSession repoSession;
+
+    @Parameter( defaultValue = "${project.remoteProjectRepositories}", readonly = true )
+    private List<RemoteRepository> remoteRepos;
 
 
     @Override
@@ -75,23 +114,73 @@ public class ExtendedWarMojo extends WarMojo {
 
         compressBundlesAndAddToWar();
 
-        addWebAppPerformanceToolsDependency();
-
+        try {
+            addWebAppPerformanceToolsDependency();
+        } catch (ArtifactDescriptorException e) {
+            throw new MojoExecutionException(e.getMessage(),e);
+        }
         super.execute();
     }
 
-    private void addWebAppPerformanceToolsDependency() {
-        Dependency dependency = new Dependency();
-        dependency.setGroupId(groupId);
-        dependency.setArtifactId("webapp-performance-tools");
-        dependency.setVersion(version);
-        dependency.setScope("compile");
+    private void addWebAppPerformanceToolsDependency() throws ArtifactDescriptorException {
+        final Artifact webappPerformanceToolsArtifact = new DefaultArtifact(groupId + ":webapp-performance-tools:" + version);
+        final Dependency webappPerformanceToolsDependency = new Dependency(webappPerformanceToolsArtifact,JavaScopes.COMPILE);
 
-        Artifact artifact = this.artifactFactory.createDependencyArtifact(groupId,"webapp-performance-tools", VersionRange.createFromVersion(version),"jar",null,"compile");
+        ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+        descriptorRequest.setArtifact( webappPerformanceToolsArtifact );
+        for (RemoteRepository remoteRepository :remoteRepos) {
+            descriptorRequest.addRepository(remoteRepository);
+        }
 
-        mavenProject.getDependencies().add(dependency);
+        ArtifactDescriptorResult descriptorResult = repoSystem.readArtifactDescriptor(repoSession, descriptorRequest);
 
-        mavenProject.getDependencyArtifacts().add(artifact);
+        List<Dependency> compileDependencies = Lists.newArrayList(Iterables.transform(
+                Iterables.filter(Iterables.concat(descriptorResult.getDependencies(),
+                        Arrays.asList(webappPerformanceToolsDependency)),
+                        new Predicate<Dependency>() {
+            @Override
+            public boolean apply(Dependency dependency) {
+                return JavaScopes.COMPILE.equals(dependency.getScope());
+            }
+        }), new Function<Dependency, Dependency>() {
+            @Override
+            public Dependency apply(@Nullable Dependency dependency) {
+                ArtifactRequest artifactRequest = new ArtifactRequest();
+                artifactRequest.setArtifact(dependency.getArtifact());
+                artifactRequest.setRepositories(remoteRepos);
+                try {
+                    ArtifactResult artifactResult = repoSystem.resolveArtifact(repoSession, artifactRequest);
+                    return dependency.setArtifact(artifactResult.getArtifact());
+                } catch (ArtifactResolutionException e) {
+                    throw new RuntimeException(e.getCause());
+                }
+            }
+        }));
+
+        mavenProject.getDependencies().addAll(Lists.transform(compileDependencies, new Function<Dependency, org.apache.maven.model.Dependency>() {
+            @Override
+            public org.apache.maven.model.Dependency apply(@Nullable Dependency dependency) {
+                org.apache.maven.model.Dependency destinationDep = new org.apache.maven.model.Dependency();
+                destinationDep.setArtifactId(dependency.getArtifact().getArtifactId());
+                destinationDep.setGroupId(dependency.getArtifact().getGroupId());
+                destinationDep.setVersion(dependency.getArtifact().getVersion());
+                destinationDep.setScope(dependency.getScope());
+                return destinationDep;
+            }
+        }));
+
+        mavenProject.getArtifacts().addAll(Lists.transform(compileDependencies, new Function<Dependency, org.apache.maven.artifact.Artifact>() {
+            @Override
+            public org.apache.maven.artifact.Artifact apply(@Nullable Dependency dependency) {
+                Artifact sourceArtifact = dependency.getArtifact();
+                org.apache.maven.artifact.Artifact destinationArt = new org.apache.maven.artifact.DefaultArtifact(sourceArtifact.getGroupId(),
+                        sourceArtifact.getArtifactId(), VersionRange.createFromVersion(sourceArtifact.getVersion()),
+                        dependency.getScope(),sourceArtifact.getExtension(),sourceArtifact.getClassifier(),JAVA_ARTIFACT_HANDLER);
+                destinationArt.setFile(sourceArtifact.getFile());
+                return destinationArt;
+            }
+
+        }));
     }
 
     private void compressBundlesAndAddToWar() throws MojoExecutionException {

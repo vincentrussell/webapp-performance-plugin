@@ -9,6 +9,8 @@ final JarFile jarFile = new JarFile(warFile)
 
 assertNotNull("webapp-performance-tools jar is not found as in lib directory for war",jarFile.getEntry("WEB-INF/lib/webapp-performance-tools-1.0-SNAPSHOT.jar"))
 assertNotNull("yuicompressor-2.4.8.jar is not found in lib directory for war (dependency of webapp-performance-tools)",jarFile.getEntry("WEB-INF/lib/yuicompressor-2.4.8.jar"))
+assertNotNull("commons-lang3-3.4.jar is not found in lib directory for war (dependency of webapp-performance-tools)",jarFile.getEntry("WEB-INF/lib/commons-lang3-3.4.jar"))
+assertNotNull("spring-core-4.3.2.RELEASE.jaris not found in lib directory for war (dependency of webapp-performance-tools)",jarFile.getEntry("WEB-INF/lib/spring-core-4.3.2.RELEASE.jar"))
 
 final InputStream inputStream = jarFile.getInputStream(jarFile.getEntry("META-INF/WebappPerformanceConfig.properties"))
 
