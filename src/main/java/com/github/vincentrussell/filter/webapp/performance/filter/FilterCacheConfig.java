@@ -1,5 +1,6 @@
 package com.github.vincentrussell.filter.webapp.performance.filter;
 
+import com.github.vincentrussell.filter.webapp.performance.ConfigurationProperties;
 import com.google.common.base.Joiner;
 
 import javax.servlet.FilterConfig;
@@ -26,18 +27,18 @@ public class FilterCacheConfig implements FilterConfig {
 
     public String getInitParameter(String name) {
         switch (name) {
-            case CacheFilter.PROCESS_IMAGES:
+            case ConfigurationProperties.PROCESS_IMAGES:
                 return Boolean.valueOf(shouldProcessImages).toString();
-            case CacheFilter.PROCESS_CSS:
+            case ConfigurationProperties.PROCESS_CSS:
                 return Boolean.valueOf(shouldProcessCss).toString();
-            case CacheFilter.PROCESS_JS:
+            case ConfigurationProperties.PROCESS_JS:
                 return Boolean.valueOf(shouldProcessJs).toString();
-            case CacheFilter.ENABLED:
+            case ConfigurationProperties.ENABLED:
                 return Boolean.valueOf(enabled).toString();
-            case CacheFilter.EXCLUSIONS:
-                return Joiner.on(CacheFilter.LIST_SEPARATOR).join(exclusions);
-            case CacheFilter.EXTENSIONS:
-                return Joiner.on(CacheFilter.LIST_SEPARATOR).join(extensions);
+            case ConfigurationProperties.EXCLUSIONS:
+                return Joiner.on(ConfigurationProperties.LIST_SEPARATOR).join(exclusions);
+            case ConfigurationProperties.EXTENSIONS:
+                return Joiner.on(ConfigurationProperties.LIST_SEPARATOR).join(extensions);
             default:
                 throw new IllegalArgumentException();
         }

@@ -1,5 +1,6 @@
 package com.github.vincentrussell.filter.webapp.performance.filter;
 
+import com.github.vincentrussell.filter.webapp.performance.ConfigurationProperties;
 import com.google.common.base.Splitter;
 import org.springframework.util.AntPathMatcher;
 
@@ -19,14 +20,6 @@ public class CacheFilter implements Filter {
     private static final long TEN_YEARS_SECONDS = SECONDS_IN_DAY * 365 * 10;
     protected static final long TEN_YEARS_MILLIS = TEN_YEARS_SECONDS * 1000;
     protected static final String MAX_AGE = "public, max-age=" + TEN_YEARS_SECONDS;
-    public static final String LIST_SEPARATOR = ",";
-    public static final String EXTENSIONS = "extensions";
-    public static final String EXCLUSIONS = "exclusions";
-    public static final String ENABLED = "enabled";
-    public static final String PROCESS_JS = "processJs";
-    public static final String PROCESS_CSS = "processCSS";
-    public static final String PROCESS_IMAGES = "processImages";
-    public static final String CACHE_FILTER_URI_PREFIX = "_cf";
     private boolean shouldProcessImages;
 
     private boolean shouldProcessCss;
@@ -39,12 +32,12 @@ public class CacheFilter implements Filter {
 
     @Override
     public void init(final FilterConfig filterConfig) {
-        shouldProcessImages = getValueFromFilterConfig(filterConfig, PROCESS_IMAGES,Boolean.TRUE);
-        shouldProcessCss = getValueFromFilterConfig(filterConfig, PROCESS_CSS,Boolean.TRUE);
-        shouldProcessJs = getValueFromFilterConfig(filterConfig, PROCESS_JS,Boolean.TRUE);
-        isEnabled = getValueFromFilterConfig(filterConfig, ENABLED,Boolean.TRUE);
-        exclusions.addAll(getListValueFromFilterConfig(filterConfig, EXCLUSIONS));
-        final List<String> suppliedExtensions = getListValueFromFilterConfig(filterConfig, EXTENSIONS);
+        shouldProcessImages = getValueFromFilterConfig(filterConfig, ConfigurationProperties.PROCESS_IMAGES,Boolean.TRUE);
+        shouldProcessCss = getValueFromFilterConfig(filterConfig, ConfigurationProperties.PROCESS_CSS,Boolean.TRUE);
+        shouldProcessJs = getValueFromFilterConfig(filterConfig, ConfigurationProperties.PROCESS_JS,Boolean.TRUE);
+        isEnabled = getValueFromFilterConfig(filterConfig, ConfigurationProperties.ENABLED,Boolean.TRUE);
+        exclusions.addAll(getListValueFromFilterConfig(filterConfig, ConfigurationProperties.EXCLUSIONS));
+        final List<String> suppliedExtensions = getListValueFromFilterConfig(filterConfig, ConfigurationProperties.EXTENSIONS);
 
         if (suppliedExtensions.size() > 0) {
             extensions.addAll(suppliedExtensions);
@@ -80,7 +73,7 @@ public class CacheFilter implements Filter {
         if (value == null) {
             return Collections.emptyList();
         }
-        return Splitter.on(LIST_SEPARATOR).splitToList(value);
+        return Splitter.on(ConfigurationProperties.LIST_SEPARATOR).splitToList(value);
     }
 
 
@@ -107,7 +100,7 @@ public class CacheFilter implements Filter {
 
     private boolean isCacheable(final String uri) {
 
-        if (!uri.contains(CACHE_FILTER_URI_PREFIX)) {
+        if (!uri.contains(ConfigurationProperties.CACHE_FILTER_URI_PREFIX)) {
             return false;
         }
 
@@ -156,4 +149,5 @@ public class CacheFilter implements Filter {
     public void destroy() {
         // nothing to do
     }
+
 }

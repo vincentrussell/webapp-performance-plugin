@@ -1,5 +1,6 @@
 package com.github.vincentrussell.filter.webapp.performance.filter;
 
+import com.github.vincentrussell.filter.webapp.performance.ConfigurationProperties;
 import org.joda.time.Duration;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +51,7 @@ public class CacheFilterTest {
 
     @Test
     public void cacheableUrl() throws IOException, ServletException {
-        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(CacheFilter.CACHE_FILTER_URI_PREFIX+"/test/whatever.js");
+        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.js");
         cacheFilter.doFilter(httpServletRequest,httpServletResponse,filterChain);
         assertCacheHeadersAreAdded(times(1));
         assertEncryptionHeadersAreAdded(never());
@@ -63,7 +64,7 @@ public class CacheFilterTest {
         cacheFilter.init(new FilterCacheConfig.Builder()
             .setEnabled(false)
             .build());
-        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(CacheFilter.CACHE_FILTER_URI_PREFIX+"/test/whatever.js");
+        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.js");
         cacheFilter.doFilter(httpServletRequest,httpServletResponse,filterChain);
         assertCacheHeadersAreAdded(never());
         assertEncryptionHeadersAreAdded(never());
@@ -76,7 +77,7 @@ public class CacheFilterTest {
         cacheFilter.init(new FilterCacheConfig.Builder()
                 .addExclusion("*/test2/whatever32.js,*/test/whatever.js")
                 .build());
-        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(CacheFilter.CACHE_FILTER_URI_PREFIX+"/test/whatever.js");
+        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.js");
         cacheFilter.doFilter(httpServletRequest,httpServletResponse,filterChain);
         assertCacheHeadersAreAdded(never());
         assertEncryptionHeadersAreAdded(never());
@@ -89,7 +90,7 @@ public class CacheFilterTest {
         cacheFilter.init(new FilterCacheConfig.Builder()
                 .addExtension("text,txt,html")
                 .build());
-        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(CacheFilter.CACHE_FILTER_URI_PREFIX+"/test/whatever.text");
+        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.text");
         cacheFilter.doFilter(httpServletRequest,httpServletResponse,filterChain);
         assertCacheHeadersAreAdded(times(1));
         assertEncryptionHeadersAreAdded(never());
@@ -98,7 +99,7 @@ public class CacheFilterTest {
 
     @Test
     public void cacheableUrlWithEncryptionForCss() throws IOException, ServletException {
-        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(CacheFilter.CACHE_FILTER_URI_PREFIX+"/test/whatever.gz.css");
+        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.gz.css");
         cacheFilter.doFilter(httpServletRequest,httpServletResponse,filterChain);
         assertCacheHeadersAreAdded(times(1));
         assertFilterChainIsCalled(times(1));
@@ -107,7 +108,7 @@ public class CacheFilterTest {
 
     @Test
     public void cacheableUrlWithEncryptionForJs() throws IOException, ServletException {
-        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(CacheFilter.CACHE_FILTER_URI_PREFIX+"/test/whatever.gz.js");
+        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.gz.js");
         cacheFilter.doFilter(httpServletRequest,httpServletResponse,filterChain);
         assertCacheHeadersAreAdded(times(1));
         assertFilterChainIsCalled(times(1));
