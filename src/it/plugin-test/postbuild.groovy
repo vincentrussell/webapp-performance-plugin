@@ -1,4 +1,5 @@
 import java.util.jar.JarFile;
+import org.apache.commons.io.IOUtils;
 import static org.junit.Assert.*
 
 final File warFile = new File(basedir, "target/webapp-performance-plugin-test-1.0-SNAPSHOT.war")
@@ -12,20 +13,49 @@ assertNotNull("yuicompressor-2.4.8.jar is not found in lib directory for war (de
 assertNotNull("commons-lang3-3.4.jar is not found in lib directory for war (dependency of webapp-performance-tools)",jarFile.getEntry("WEB-INF/lib/commons-lang3-3.4.jar"))
 assertNotNull("spring-core-4.3.2.RELEASE.jaris not found in lib directory for war (dependency of webapp-performance-tools)",jarFile.getEntry("WEB-INF/lib/spring-core-4.3.2.RELEASE.jar"))
 
-final InputStream inputStream = jarFile.getInputStream(jarFile.getEntry("META-INF/WebappPerformanceConfig.properties"))
+final InputStream propertiesFileInputStream = jarFile.getInputStream(jarFile.getEntry("META-INF/WebappPerformanceConfig.properties"))
+final InputStream webXMLInputStream = jarFile.getInputStream(jarFile.getEntry("WEB-INF/web.xml"))
 
-final Properties properties = new Properties()
-properties.load(inputStream)
+try {
 
-final String hash = properties.get("hash")
-assertNotNull("can't find hash in properties file",hash);
-assertNotNull("can't find bundle.css.bundle2.url in properties file",properties.get("bundle.css.bundle2.url"))
-assertNotNull("can't find bundle.js.bundle1.url in properties file",properties.get("bundle.js.bundle1.url"))
+    StringWriter webXmlStringWriter = new StringWriter();
+
+    IOUtils.copy(webXMLInputStream, webXmlStringWriter);
+
+    def expectedWebXML = """
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN" "http://java.sun.com/dtd/web-app_2_3.dtd">
+<web-app>
+  <filter>
+    <filter-name>cacheFilter</filter-name>
+    <filter-class>com.github.vincentrussell.filter.webapp.performance.filter.CacheFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>cacheFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  <display-name>Archetype Created Web Application</display-name>
+</web-app>
+""".trim().replaceAll("\r", "").replaceAll("\n", "")
+
+    def actualWebXml = webXmlStringWriter.toString().trim().replaceAll("\r", "").replaceAll("\n", "");
+
+    assertEquals(expectedWebXML, actualWebXml);
+
+    final Properties properties = new Properties()
+    properties.load(propertiesFileInputStream)
+
+    final String hash = properties.get("hash")
+    assertNotNull("can't find hash in properties file", hash);
+    assertNotNull("can't find bundle.css.bundle2.url in properties file", properties.get("bundle.css.bundle2.url"))
+    assertNotNull("can't find bundle.js.bundle1.url in properties file", properties.get("bundle.js.bundle1.url"))
 
 
-assertNotNull("bundle 2 not found in war for war",jarFile.getEntry("_cf/$hash/cssBundles/bundle2.min.css"))
-assertNotNull("bundle 1 not found in war for war",jarFile.getEntry("_cf/$hash/jsBundles/bundle1.min.js"))
+    assertNotNull("bundle 2 not found in war for war", jarFile.getEntry("_cf/$hash/cssBundles/bundle2.min.css"))
+    assertNotNull("bundle 1 not found in war for war", jarFile.getEntry("_cf/$hash/jsBundles/bundle1.min.js"))
 
-inputStream.close();
-
-jarFile.close();
+} finally {
+    IOUtils.closeQuietly(propertiesFileInputStream);
+    IOUtils.closeQuietly(webXMLInputStream);
+    IOUtils.closeQuietly(jarFile);
+}

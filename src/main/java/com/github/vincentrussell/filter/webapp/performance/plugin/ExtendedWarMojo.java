@@ -2,12 +2,14 @@ package com.github.vincentrussell.filter.webapp.performance.plugin;
 
 import com.github.vincentrussell.filter.webapp.performance.ConfigurationProperties;
 import com.github.vincentrussell.filter.webapp.performance.compress.util.Compressor;
+import com.github.vincentrussell.filter.webapp.performance.plugin.webxml.WebXmlModifier;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOExceptionWithCause;
 import org.apache.maven.artifact.handler.ArtifactHandler;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -29,9 +31,7 @@ import org.eclipse.aether.resolution.*;
 import org.eclipse.aether.util.artifact.JavaScopes;
 
 import javax.annotation.Nullable;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 @Mojo( name = "war", defaultPhase = LifecyclePhase.PACKAGE, threadSafe = true, requiresDependencyResolution = ResolutionScope.RUNTIME )
@@ -77,6 +77,12 @@ public class ExtendedWarMojo extends WarMojo {
     @Parameter(defaultValue = "false", property = "disableOptimizations", required = true)
     protected boolean disableOptimizations;
 
+    @Parameter( defaultValue = "${project.basedir}", readonly = true, required = true )
+    private File basedir;
+
+    @Parameter( defaultValue = "${project.basedir}/src/main/webapp/WEB-INF/web.xml", readonly = true, required = true )
+    private File defaultWebXmlFile;
+
     @Parameter( defaultValue = "${project.groupId}", required = true, readonly = true )
     private String groupId;
 
@@ -98,7 +104,6 @@ public class ExtendedWarMojo extends WarMojo {
     @Component
     private ArtifactResolver artifactResolver;
 
-
     @Component
     private RepositorySystem repoSystem = null;
 
@@ -115,11 +120,27 @@ public class ExtendedWarMojo extends WarMojo {
         compressBundlesAndAddToWar();
 
         try {
+            addCacheFilterToWebXml();
             addWebAppPerformanceToolsDependency();
-        } catch (ArtifactDescriptorException e) {
+        } catch (ArtifactDescriptorException | IOException e) {
             throw new MojoExecutionException(e.getMessage(),e);
         }
         super.execute();
+    }
+
+    private void addCacheFilterToWebXml() throws IOException {
+        File webXml = defaultWebXmlFile;
+        if (getWebXml()!=null) {
+            webXml = getWebXml();
+        }
+
+        File tempWebXml = new File(getOutputDirectory(), System.currentTimeMillis()+"web.xml");
+        try (FileInputStream fileInputStream = new FileInputStream(webXml);
+        FileOutputStream fileOutputStream = new FileOutputStream(tempWebXml)) {
+            WebXmlModifier webXmlModifier = new WebXmlModifier(fileInputStream);
+            webXmlModifier.writeToOutputStream(fileOutputStream);
+            setWebXml(tempWebXml);
+        }
     }
 
     private void addWebAppPerformanceToolsDependency() throws ArtifactDescriptorException {
