@@ -88,6 +88,16 @@ public class FilterCacheConfig implements FilterConfig {
         extensions.addAll(Arrays.asList(extension));
     }
 
+    public void setExclusions(String... exclusion) {
+        exclusions.clear();
+        exclusions.addAll(Arrays.asList(exclusion));
+    }
+
+    public void setExtensions(String... extension) {
+        extensions.clear();
+        extensions.addAll(Arrays.asList(extension));
+    }
+
     public Set<String> getExclusions() {
         return Collections.unmodifiableSet(exclusions);
     }
