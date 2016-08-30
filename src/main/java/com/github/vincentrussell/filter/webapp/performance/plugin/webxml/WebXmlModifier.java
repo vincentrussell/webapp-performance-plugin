@@ -1,6 +1,10 @@
 package com.github.vincentrussell.filter.webapp.performance.plugin.webxml;
 
+import com.github.vincentrussell.filter.webapp.performance.ConfigurationProperties;
 import com.github.vincentrussell.filter.webapp.performance.filter.CacheFilter;
+import com.github.vincentrussell.filter.webapp.performance.filter.FilterCacheConfig;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -45,8 +49,14 @@ public class WebXmlModifier {
 
     private final InputStream inputStream;
     private final Document document;
+    private final FilterCacheConfig filterCacheConfig;
 
     public WebXmlModifier(InputStream inputStream) throws IOException {
+        this(inputStream,null);
+    }
+
+    public WebXmlModifier(InputStream inputStream, FilterCacheConfig filterCacheConfig) throws IOException {
+        this.filterCacheConfig = filterCacheConfig;
         notNull(inputStream,"input stream cannot be null");
         this.inputStream = inputStream;
         try {
@@ -94,14 +104,37 @@ public class WebXmlModifier {
 
     private List<Element> getCacheFilterElements(String cacheFilter) {
         return Arrays.asList(element("filter",
-                element("filter-name",cacheFilter),
-                element("filter-class",CacheFilter.class.getName())),
+                getFilterWithInitParams(cacheFilter)),
                 element("filter-mapping",
                         element("filter-name",cacheFilter),
                         element("url-pattern","/*")));
 
     }
 
+    private Element[] getFilterWithInitParams(String cacheFilter) {
+        List<Element> elements = new ArrayList<>();
+        elements.add(element("filter-name",cacheFilter));
+        elements.add(element("filter-class",CacheFilter.class.getName()));
+        if (filterCacheConfig!=null) {
+            setInitParamValue(elements,ConfigurationProperties.PROCESS_CSS,filterCacheConfig.isShouldProcessCss());
+            setInitParamValue(elements, ConfigurationProperties.PROCESS_IMAGES,filterCacheConfig.isShouldProcessImages());
+            setInitParamValue(elements,ConfigurationProperties.PROCESS_JS,filterCacheConfig.isShouldProcessJs());
+            setInitParamValue(elements,ConfigurationProperties.ENABLED,filterCacheConfig.isEnabled());
+            if (filterCacheConfig.getExclusions()!=null && filterCacheConfig.getExclusions().size() >0) {
+                setInitParamValue(elements,ConfigurationProperties.EXCLUSIONS, Joiner.on(ConfigurationProperties.LIST_SEPARATOR).join(filterCacheConfig.getExclusions()));
+            }
+            if (filterCacheConfig.getExtensions()!=null && filterCacheConfig.getExtensions().size() >0) {
+                setInitParamValue(elements,ConfigurationProperties.EXTENSIONS, Joiner.on(ConfigurationProperties.LIST_SEPARATOR).join(filterCacheConfig.getExtensions()));
+            }
+        }
+        return elements.toArray(new Element[elements.size()]);
+    }
+
+    private void setInitParamValue(List<Element> elements, String paramName, Object value) {
+        elements.add(element("init-param",
+                element("param-name",paramName),
+                element("param-value",value.toString())));
+    }
 
 
     private Element element(String key) {

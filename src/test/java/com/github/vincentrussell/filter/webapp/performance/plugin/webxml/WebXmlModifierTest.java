@@ -2,6 +2,7 @@ package com.github.vincentrussell.filter.webapp.performance.plugin.webxml;
 
 import com.github.approval.Approvals;
 import com.github.approval.reporters.Reporters;
+import com.github.vincentrussell.filter.webapp.performance.filter.FilterCacheConfig;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,28 +41,37 @@ public class WebXmlModifierTest {
 
 
     @Test
+    public void webXmlWithContextParamAndOtherStuffAndFilterConfig() throws IOException {
+        FilterCacheConfig filterCacheConfig = new FilterCacheConfig();
+        filterCacheConfig.addExclusion("/exclusion1","/exclusion2");
+        filterCacheConfig.addExtension("bat","exe");
+        inputStreamTest("webXmlWithContextParamAndOtherStuffAndFilterConfig",filterCacheConfig);
+    }
+
+
+    @Test
     public void webXmlWithContextParamAndOtherStuff() throws IOException {
-       inputStreamTest("webXmlWithContextParamAndOtherStuff");
+       inputStreamTest("webXmlWithContextParamAndOtherStuff",null);
     }
 
     @Test
     public void webXmlEmpty() throws IOException {
-        inputStreamTest("webXmlEmpty");
+        inputStreamTest("webXmlEmpty",null);
     }
 
     @Test
     public void webXmlWithContextParamAndEnd() throws IOException {
-        inputStreamTest("webXmlWithContextParamAndEnd");
+        inputStreamTest("webXmlWithContextParamAndEnd",null);
     }
 
     @Test
     public void noContextParamAtAll() throws IOException {
-        inputStreamTest("noContextParamAtAll");
+        inputStreamTest("noContextParamAtAll",null);
     }
 
-    private void inputStreamTest(String fileName) throws IOException {
+    private void inputStreamTest(String fileName, FilterCacheConfig filterCacheConfig) throws IOException {
         try (InputStream inputStream = getClass().getResourceAsStream("/"+fileName+".xml")) {
-            WebXmlModifier webXmlModifier = new WebXmlModifier(inputStream);
+            WebXmlModifier webXmlModifier = new WebXmlModifier(inputStream,filterCacheConfig);
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                 webXmlModifier.writeToOutputStream(outputStream);
                 Approvals.verify(outputStream.toString("UTF-8"), getApprovalPath(fileName));

@@ -2,6 +2,7 @@ package com.github.vincentrussell.filter.webapp.performance.plugin;
 
 import com.github.vincentrussell.filter.webapp.performance.ConfigurationProperties;
 import com.github.vincentrussell.filter.webapp.performance.compress.util.Compressor;
+import com.github.vincentrussell.filter.webapp.performance.filter.FilterCacheConfig;
 import com.github.vincentrussell.filter.webapp.performance.plugin.webxml.WebXmlModifier;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -9,7 +10,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOExceptionWithCause;
 import org.apache.maven.artifact.handler.ArtifactHandler;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -61,6 +61,9 @@ public class ExtendedWarMojo extends WarMojo {
             return true;
         }
     };
+
+    @Parameter(property = "filterCacheConfig", required = false)
+    protected FilterCacheConfig filterCacheConfig;
 
     @Parameter(property = "bundles", required = true)
     protected Bundle[] bundles = new Bundle[0];
@@ -137,7 +140,7 @@ public class ExtendedWarMojo extends WarMojo {
         File tempWebXml = new File(getOutputDirectory(), System.currentTimeMillis()+"web.xml");
         try (FileInputStream fileInputStream = new FileInputStream(webXml);
         FileOutputStream fileOutputStream = new FileOutputStream(tempWebXml)) {
-            WebXmlModifier webXmlModifier = new WebXmlModifier(fileInputStream);
+            WebXmlModifier webXmlModifier = new WebXmlModifier(fileInputStream, filterCacheConfig);
             webXmlModifier.writeToOutputStream(fileOutputStream);
             setWebXml(tempWebXml);
         }

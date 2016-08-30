@@ -47,6 +47,19 @@
                                 </cssFiles>
                             </cssBundle>
                         </bundles>
+                        <filterCacheConfig>
+                            <shouldProcessImages>false</shouldProcessImages>
+                            <shouldProcessCss>true</shouldProcessCss>
+                            <shouldProcessJs>true</shouldProcessJs>
+                            <exclusions>
+                                <exclusion>/exclusion1</exclusion>
+                                <exclusion>/exclusion2</exclusion>
+                            </exclusions>
+                            <extensions>
+                                <extension>exe</extension>
+                                <extension>bat</extension>
+                            </extensions>
+                        </filterCacheConfig>
                     </configuration>
                 </plugin>
             </plugins>

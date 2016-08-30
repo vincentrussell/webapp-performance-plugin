@@ -29,6 +29,30 @@ try {
   <filter>
     <filter-name>cacheFilter</filter-name>
     <filter-class>com.github.vincentrussell.filter.webapp.performance.filter.CacheFilter</filter-class>
+    <init-param>
+      <param-name>processCSS</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <param-name>processImages</param-name>
+      <param-value>false</param-value>
+    </init-param>
+    <init-param>
+      <param-name>processJs</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <param-name>enabled</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <param-name>exclusions</param-name>
+      <param-value>/exclusion1,/exclusion2</param-value>
+    </init-param>
+    <init-param>
+      <param-name>extensions</param-name>
+      <param-value>exe,bat</param-value>
+    </init-param>
   </filter>
   <filter-mapping>
     <filter-name>cacheFilter</filter-name>
