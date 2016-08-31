@@ -13,6 +13,7 @@ import org.jdom2.input.SAXBuilder;
 import org.jdom2.input.sax.SAXHandler;
 import org.jdom2.input.sax.SAXHandlerFactory;
 import org.jdom2.output.Format;
+import org.jdom2.output.LineSeparator;
 import org.jdom2.output.XMLOutputter;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -157,11 +158,12 @@ public class WebXmlModifier {
 
     public void writeToOutputStream(OutputStream outputStream) throws IOException {
         try {
-            // new XMLOutputter().output(doc, System.out);
             XMLOutputter xmlOutput = new XMLOutputter();
 
             // display nice nice
-            xmlOutput.setFormat(Format.getPrettyFormat());
+            Format format = Format.getPrettyFormat();
+            format.setLineSeparator(LineSeparator.UNIX);
+            xmlOutput.setFormat(format);
             xmlOutput.output(document, outputStream);
         } catch (Throwable e) {
             throw new IOException(e);

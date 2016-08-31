@@ -60,9 +60,9 @@ try {
   </filter-mapping>
   <display-name>Archetype Created Web Application</display-name>
 </web-app>
-""".trim().replaceAll("\r", "").replaceAll("\n", "")
+""".trim();
 
-    def actualWebXml = webXmlStringWriter.toString().trim().replaceAll("\r", "").replaceAll("\n", "");
+    def actualWebXml = webXmlStringWriter.toString().trim();
 
     assertEquals(expectedWebXML, actualWebXml);
 
