@@ -46,15 +46,15 @@ public class BundleRenderTagTest {
     @Test
     public void emptyBundleName() {
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("bundleName must not be empty or null");
-        bundleRenderTag.setBundleName("");
+        thrown.expectMessage("name must not be empty or null");
+        bundleRenderTag.setName("");
     }
 
     @Test
     public void nullBundleName() {
         thrown.expect(NullPointerException.class);
-        thrown.expectMessage("bundleName must not be empty or null");
-        bundleRenderTag.setBundleName(null);
+        thrown.expectMessage("name must not be empty or null");
+        bundleRenderTag.setName(null);
     }
 
     @Test
@@ -80,7 +80,7 @@ public class BundleRenderTagTest {
 
     @Test
     public void typeCss() throws IOException, JspException {
-        bundleRenderTag.setBundleName("bundle2");
+        bundleRenderTag.setName("bundle2");
         bundleRenderTag.setType(BundleRenderTag.Type.CSS);
         bundleRenderTag.doTag();
         assertEquals("<script type='text/javascript' src='/website/_cf/07b835d14e6cd84cbeafc91f9f57993c/cssBundles/bundle2.min.css'/>\n",mockHttpServletResponse.getContentAsString());
@@ -88,7 +88,7 @@ public class BundleRenderTagTest {
 
     @Test
     public void typeJs() throws IOException, JspException {
-        bundleRenderTag.setBundleName("bundle1");
+        bundleRenderTag.setName("bundle1");
         bundleRenderTag.setType(BundleRenderTag.Type.JS);
         bundleRenderTag.doTag();
         assertEquals("<script type='text/javascript' src='/website/_cf/07b835d14e6cd84cbeafc91f9f57993c/jsBundles/bundle1.min.js'/>\n",mockHttpServletResponse.getContentAsString());

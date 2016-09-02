@@ -1,0 +1,20 @@
+<taglib>
+    <tlib-version>1.0</tlib-version>
+    <jsp-version>2.0</jsp-version>
+    <short-name>BundleRenderTag</short-name>
+    <tag>
+        <name>renderBundle</name>
+        <tag-class>com.github.vincentrussell.filter.webapp.performance.taglib.BundleRenderTag</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>name</name>
+            <required>true</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>type</name>
+            <required>true</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+</taglib>

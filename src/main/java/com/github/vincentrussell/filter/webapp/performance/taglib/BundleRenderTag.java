@@ -1,7 +1,5 @@
 package com.github.vincentrussell.filter.webapp.performance.taglib;
 
-import netscape.javascript.JSException;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
@@ -26,35 +24,34 @@ public class BundleRenderTag extends SimpleTagSupport {
         }
     }
 
-
-    private String bundleName;
+    private String name;
     private String type;
 
-    public void setBundleName(String bundleName) {
-        notEmpty(bundleName,"bundleName must not be empty or null");
-        this.bundleName = bundleName;
+    public void setName(String name) {
+        notEmpty(name,"name must not be empty or null");
+        this.name = name;
     }
 
     public void setType(String type) {
-        notEmpty(bundleName,"type must not be empty or null");
+        notEmpty(name,"type must not be empty or null");
         notEmpty(type);
         this.type = type;
     }
 
     public void setType(Type type) {
-        notEmpty(bundleName,"type must not be empty or null");
+        notEmpty(name,"type must not be empty or null");
         notNull(type);
         setType(type.toString().toLowerCase());
     }
 
     public void doTag() throws JspException, IOException  {
         notEmpty(type);
-        notEmpty(bundleName);
+        notEmpty(name);
         final PageContext pageContext = (PageContext) getJspContext();
         final String contextPath = ((HttpServletRequest)pageContext.getRequest()).getContextPath();
-        String value = properties.getProperty("bundle."+type+"."+bundleName+".url");
+        String value = properties.getProperty("bundle."+type+"."+ name +".url");
         if (value==null) {
-            throw new JspException("can not find bundle "+bundleName+ " of type " + type);
+            throw new JspException("can not find bundle "+ name + " of type " + type);
         }
         getJspContext().getOut().println("<script type='text/javascript' src='"+contextPath+value+"'/>");
     }
