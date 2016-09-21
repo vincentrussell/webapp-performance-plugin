@@ -1,0 +1,2 @@
+function test(){var a="a"+"b".toUpperCase()};obj.css({"float":"left"});obj.css({cssFloat:"left"});
+
