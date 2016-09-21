@@ -14,6 +14,7 @@
     <jdkVersion>1.7</jdkVersion>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.min-version>3.1.0</maven.min-version>
+    <ghostdriver.version>1.1.0</ghostdriver.version>
     <aether.version>1.1.0</aether.version>
     <webapp.performance.tools.version>1.0-SNAPSHOT</webapp.performance.tools.version>
   </properties>
@@ -161,6 +162,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.github.detro.ghostdriver</groupId>
+      <artifactId>phantomjsdriver</artifactId>
+      <version>${ghostdriver.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
@@ -187,7 +194,6 @@
         </plugin>
       </plugins>
     </pluginManagement>
-
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -222,12 +228,13 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-invoker-plugin</artifactId>
-        <version>1.5</version>
         <configuration>
           <cloneClean>true</cloneClean>
           <addTestClassPath>true</addTestClassPath>
           <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
           <debug>true</debug>
+          <failIfNoProjects>true</failIfNoProjects>
+          <ignoreFailures>false</ignoreFailures>
           <pomIncludes>
             <pomInclude>*/pom.xml</pomInclude>
           </pomIncludes>

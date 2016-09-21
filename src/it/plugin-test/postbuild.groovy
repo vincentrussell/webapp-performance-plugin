@@ -2,7 +2,7 @@ import java.util.jar.JarFile;
 import org.apache.commons.io.IOUtils;
 import static org.junit.Assert.*
 
-final File warFile = new File(basedir, "target/webapp-performance-plugin-test-1.0-SNAPSHOT.war")
+final File warFile = new File(new File(basedir,"target"), "webapp-performance-plugin-test-1.0-SNAPSHOT.war")
 assertTrue("war file doesn't exist",warFile.exists())
 
 
@@ -82,4 +82,17 @@ try {
     IOUtils.closeQuietly(propertiesFileInputStream);
     IOUtils.closeQuietly(webXMLInputStream);
     IOUtils.closeQuietly(jarFile);
+}
+
+
+final File failsafeTestFile = new File(new File(new File(basedir,"target"),"failsafe-reports"), "com.github.vincentrussell.filter.webapp.performance.PhantomTestsIT.txt")
+
+final InputStream failsafeInputStream = new FileInputStream(failsafeTestFile)
+
+try {
+    String testResults = IOUtils.toString(failsafeInputStream)
+    assertFalse("PhantomTestsIT test failed",testResults.contains("FAILURE"))
+
+} finally {
+    IOUtils.closeQuietly(failsafeInputStream);
 }
