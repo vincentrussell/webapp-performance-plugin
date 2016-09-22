@@ -1,5 +1,7 @@
 package com.github.vincentrussell.filter.webapp.performance.taglib;
 
+import com.github.vincentrussell.filter.webapp.performance.ConfigurationProperties;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
@@ -16,7 +18,7 @@ public class BundleRenderTag extends SimpleTagSupport {
     private static Properties properties = new Properties();
 
     {
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("META-INF/WebappPerformanceConfig.properties");
+        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(ConfigurationProperties.PROPERTIES_FILE_NAME);
         try {
             properties.load(inputStream);
         } catch (IOException e) {
