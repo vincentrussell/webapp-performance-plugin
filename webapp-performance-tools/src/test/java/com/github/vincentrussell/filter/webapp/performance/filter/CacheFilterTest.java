@@ -23,6 +23,7 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 public class CacheFilterTest {
 
+    public static final String CONTEXT_PATH = "/contextPath";
     CacheFilter cacheFilter;
     HttpServletRequest httpServletRequest;
     HttpServletResponse httpServletResponse;
@@ -35,13 +36,14 @@ public class CacheFilterTest {
         httpServletRequest = mock(HttpServletRequest.class);
         httpServletResponse = mock(HttpServletResponse.class);
         filterChain = mock(FilterChain.class);
+        Mockito.when(httpServletRequest.getContextPath()).thenReturn(CONTEXT_PATH);
         Mockito.reset(httpServletResponse);
     }
 
 
     @Test
     public void nonCacheableURL() throws IOException, ServletException {
-        Mockito.when(httpServletRequest.getRequestURI()).thenReturn("test/whatever.html");
+        Mockito.when(httpServletRequest.getRequestURI()).thenReturn("/test/whatever.html");
         cacheFilter.doFilter(httpServletRequest,httpServletResponse,filterChain);
         assertCacheHeadersAreAdded(never());
         assertEncryptionHeadersAreAdded(never());
@@ -51,7 +53,7 @@ public class CacheFilterTest {
 
     @Test
     public void cacheableUrl() throws IOException, ServletException {
-        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.js");
+        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(CONTEXT_PATH + "/" + ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.js");
         cacheFilter.doFilter(httpServletRequest,httpServletResponse,filterChain);
         assertCacheHeadersAreAdded(times(1));
         assertEncryptionHeadersAreAdded(never());
@@ -90,7 +92,7 @@ public class CacheFilterTest {
         cacheFilter.init(new FilterCacheConfig.Builder()
                 .addExtension("text,txt,html")
                 .build());
-        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.text");
+        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(CONTEXT_PATH + "/" + ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.text");
         cacheFilter.doFilter(httpServletRequest,httpServletResponse,filterChain);
         assertCacheHeadersAreAdded(times(1));
         assertEncryptionHeadersAreAdded(never());
@@ -99,7 +101,7 @@ public class CacheFilterTest {
 
     @Test
     public void cacheableUrlWithEncryptionForCss() throws IOException, ServletException {
-        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.gz.css");
+        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(CONTEXT_PATH + "/" + ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.gz.css");
         cacheFilter.doFilter(httpServletRequest,httpServletResponse,filterChain);
         assertCacheHeadersAreAdded(times(1));
         assertFilterChainIsCalled(times(1));
@@ -108,7 +110,7 @@ public class CacheFilterTest {
 
     @Test
     public void cacheableUrlWithEncryptionForJs() throws IOException, ServletException {
-        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.gz.js");
+        Mockito.when(httpServletRequest.getRequestURI()).thenReturn(CONTEXT_PATH + "/" + ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.gz.js");
         cacheFilter.doFilter(httpServletRequest,httpServletResponse,filterChain);
         assertCacheHeadersAreAdded(times(1));
         assertFilterChainIsCalled(times(1));

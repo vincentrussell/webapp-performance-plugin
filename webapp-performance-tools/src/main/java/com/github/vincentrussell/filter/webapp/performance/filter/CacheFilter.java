@@ -84,9 +84,10 @@ public class CacheFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest)req;
         HttpServletResponse response = (HttpServletResponse)res;
 
-        String uri = request.getRequestURI();
+        final String uri = request.getRequestURI();
+        final String contextPath = request.getContextPath();
 
-        if (isEnabled && isCacheable(uri)) {
+        if (isEnabled && isCacheable(uri,contextPath)) {
             response.setDateHeader("Expires", System.currentTimeMillis() + TEN_YEARS_MILLIS);
             response.setHeader("Cache-Control", MAX_AGE);
             if (uri.endsWith(".gz.css") || uri.endsWith(".gz.js")) {
@@ -98,9 +99,9 @@ public class CacheFilter implements Filter {
         chain.doFilter(request, response);
     }
 
-    private boolean isCacheable(final String uri) {
+    private boolean isCacheable(final String uri, final String contextPath) {
 
-        if (!uri.contains(ConfigurationProperties.CACHE_FILTER_URI_PREFIX)) {
+        if (!uri.startsWith(contextPath + "/" + ConfigurationProperties.CACHE_FILTER_URI_PREFIX)) {
             return false;
         }
 
