@@ -14,6 +14,7 @@
     <jdkVersion>1.7</jdkVersion>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.min-version>3.1.0</maven.min-version>
+    <jetty.version>9.1.6.v20160112</jetty.version>
     <ghostdriver.version>1.1.0</ghostdriver.version>
     <aether.version>1.1.0</aether.version>
     <webapp.performance.tools.version>1.0-SNAPSHOT</webapp.performance.tools.version>
@@ -50,6 +51,11 @@
         <groupId>javax.servlet</groupId>
         <artifactId>servlet-api</artifactId>
         <version>2.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-webapp</artifactId>
+        <version>${jetty.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven.plugins</groupId>
@@ -159,6 +165,11 @@
     <dependency>
       <groupId>com.github.nikolavp</groupId>
       <artifactId>approval-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-webapp</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

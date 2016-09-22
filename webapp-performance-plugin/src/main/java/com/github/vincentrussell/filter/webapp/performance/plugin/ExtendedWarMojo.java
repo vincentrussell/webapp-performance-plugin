@@ -215,15 +215,15 @@ public class ExtendedWarMojo extends WarMojo {
         File hashRootDir = new File(cacheFilterDir, hash);
         File cssCacheFilterDir = new File(hashRootDir, CSS_BUNDLES);
         File jsCacheFilterDir = new File(hashRootDir, JS_BUNDLES);
-        File metaInfDir = new File(rootDir, "META-INF");
         File webInfDir = new File(rootDir, "WEB-INF");
         File webInfLibDir = new File(webInfDir, "lib");
+        File webInfClassesDir = new File(webInfDir, "classes");
 
         FileUtils.deleteQuietly(cacheFilterDir);
 
         cssCacheFilterDir.mkdirs();
         jsCacheFilterDir.mkdirs();
-        metaInfDir.mkdirs();
+        webInfClassesDir.mkdirs();
         webInfLibDir.mkdirs();
 
         Compressor compressor = new Compressor.Builder()
@@ -278,7 +278,7 @@ public class ExtendedWarMojo extends WarMojo {
             bundleNames.add(bundleName);
         }
 
-        try (FileOutputStream fileOutputStream = new FileOutputStream(new File(metaInfDir, ConfigurationProperties.PROPERTIES_FILE_NAME))) {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(new File(webInfClassesDir, ConfigurationProperties.PROPERTIES_FILE_NAME))) {
             properties.store(fileOutputStream,ConfigurationProperties.PROPERTIES_FILE_NAME + " plugin save");
         } catch (IOException  e) {
             throw new MojoExecutionException(e.getMessage(),e);

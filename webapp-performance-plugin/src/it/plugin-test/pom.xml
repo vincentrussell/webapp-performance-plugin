@@ -8,7 +8,9 @@
 
     <description>A simple IT verifying the basic use case.</description>
 
+
     <properties>
+        <jdkVersion>1.7</jdkVersion>
         <junit.version>4.12</junit.version>
         <ghostdriver.version>1.1.0</ghostdriver.version>
         <jetty.version>9.1.6.v20160112</jetty.version>
@@ -86,6 +88,15 @@
                 <groupId>@project.groupId@</groupId>
                 <artifactId>@project.artifactId@</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5</version>
+                <configuration>
+                    <source>${jdkVersion}</source>
+                    <target>${jdkVersion}</target>
+                </configuration>
+            </plugin>
                 <!-- Installs PhantomJS so it doesn't have to be pre-installed -->
             <plugin>
                 <groupId>com.github.klieber</groupId>
@@ -129,8 +140,8 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${failsafe.version}</version>
                 <configuration>
-                    <argLine>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</argLine>
                     <systemPropertyVariables>
+                        <project.version>${project.version}</project.version>
                         <phantomjs.binary>${phantomjs.binary}</phantomjs.binary>
                         <jetty.port>${jetty.port}</jetty.port>
                     </systemPropertyVariables>
@@ -172,13 +183,16 @@
                     <httpConnector>
                         <port>${jetty.port}</port>
                     </httpConnector>
+                    <webApp>
+                        <contextPath>/test</contextPath>
+                    </webApp>
                 </configuration>
                 <executions>
                     <execution>
                         <id>start-jetty</id>
                         <phase>pre-integration-test</phase>
                         <goals>
-                            <goal>run</goal>
+                            <goal>run-war</goal>
                         </goals>
                         <configuration>
                             <daemon>true</daemon>
