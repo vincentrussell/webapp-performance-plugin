@@ -32,7 +32,7 @@ public class CacheFilterTest {
     @Before
     public void before() {
         cacheFilter = new CacheFilter();
-        cacheFilter.init(new FilterCacheConfig());
+        cacheFilter.init(new CacheFilterConfig());
         httpServletRequest = mock(HttpServletRequest.class);
         httpServletResponse = mock(HttpServletResponse.class);
         filterChain = mock(FilterChain.class);
@@ -63,7 +63,7 @@ public class CacheFilterTest {
     @Test
     public void cacheableUrlNotEnabled() throws IOException, ServletException {
         cacheFilter = new CacheFilter();
-        cacheFilter.init(new FilterCacheConfig.Builder()
+        cacheFilter.init(new CacheFilterConfig.Builder()
             .setEnabled(false)
             .build());
         Mockito.when(httpServletRequest.getRequestURI()).thenReturn(ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.js");
@@ -76,7 +76,7 @@ public class CacheFilterTest {
     @Test
     public void exclusions() throws IOException, ServletException {
         cacheFilter = new CacheFilter();
-        cacheFilter.init(new FilterCacheConfig.Builder()
+        cacheFilter.init(new CacheFilterConfig.Builder()
                 .addExclusion("*/test2/whatever32.js,*/test/whatever.js")
                 .build());
         Mockito.when(httpServletRequest.getRequestURI()).thenReturn(ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.js");
@@ -89,7 +89,7 @@ public class CacheFilterTest {
     @Test
     public void extensions() throws IOException, ServletException {
         cacheFilter = new CacheFilter();
-        cacheFilter.init(new FilterCacheConfig.Builder()
+        cacheFilter.init(new CacheFilterConfig.Builder()
                 .addExtension("text,txt,html")
                 .build());
         Mockito.when(httpServletRequest.getRequestURI()).thenReturn(CONTEXT_PATH + "/" + ConfigurationProperties.CACHE_FILTER_URI_PREFIX+"/test/whatever.text");

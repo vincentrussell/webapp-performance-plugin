@@ -42,10 +42,6 @@ try {
       <param-value>true</param-value>
     </init-param>
     <init-param>
-      <param-name>enabled</param-name>
-      <param-value>true</param-value>
-    </init-param>
-    <init-param>
       <param-name>exclusions</param-name>
       <param-value>/exclusion1,/exclusion2</param-value>
     </init-param>

@@ -82,7 +82,7 @@
                                 </cssFiles>
                             </cssBundle>
                         </bundles>
-                        <filterCacheConfig>
+                        <cacheFilterConfig>
                             <shouldProcessImages>false</shouldProcessImages>
                             <shouldProcessCss>true</shouldProcessCss>
                             <shouldProcessJs>true</shouldProcessJs>
@@ -94,7 +94,7 @@
                                 <extension>exe</extension>
                                 <extension>bat</extension>
                             </extensions>
-                        </filterCacheConfig>
+                        </cacheFilterConfig>
                     </configuration>
                 </plugin>
             </plugins>

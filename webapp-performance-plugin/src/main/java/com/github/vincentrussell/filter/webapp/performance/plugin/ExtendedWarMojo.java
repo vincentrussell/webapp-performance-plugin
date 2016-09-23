@@ -2,7 +2,8 @@ package com.github.vincentrussell.filter.webapp.performance.plugin;
 
 import com.github.vincentrussell.filter.webapp.performance.ConfigurationProperties;
 import com.github.vincentrussell.filter.webapp.performance.compress.util.Compressor;
-import com.github.vincentrussell.filter.webapp.performance.filter.FilterCacheConfig;
+import com.github.vincentrussell.filter.webapp.performance.filter.CompressingFilterConfig;
+import com.github.vincentrussell.filter.webapp.performance.filter.CacheFilterConfig;
 import com.github.vincentrussell.filter.webapp.performance.plugin.webxml.WebXmlModifier;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -62,10 +63,12 @@ public class ExtendedWarMojo extends WarMojo {
         }
     };
 
-    @Parameter(property = "filterCacheConfig", required = false)
-    protected FilterCacheConfig filterCacheConfig;
-
-    @Parameter(property = "bundles", required = true)
+    //config items
+    @Parameter(property = "cacheFilterConfig", required = false)
+    protected CacheFilterConfig cacheFilterConfig = null;
+    @Parameter(property = "compressingFilterConfig", required = false)
+    protected CompressingFilterConfig compressingFilterConfig = null;
+    @Parameter(property = "bundles", required = false)
     protected Bundle[] bundles = new Bundle[0];
     @Parameter(defaultValue = "UTF-8", property = "charset", required = true)
     protected String charset;
@@ -79,6 +82,7 @@ public class ExtendedWarMojo extends WarMojo {
     protected boolean preserveAllSemiColons;
     @Parameter(defaultValue = "false", property = "disableOptimizations", required = true)
     protected boolean disableOptimizations;
+    // ^^^^^ config items ^^^^^^
 
     @Parameter( defaultValue = "${project.basedir}", readonly = true, required = true )
     private File basedir;
@@ -123,7 +127,7 @@ public class ExtendedWarMojo extends WarMojo {
         compressBundlesAndAddToWar();
 
         try {
-            addCacheFilterToWebXml();
+            addFiltersToWebXml();
             addWebAppPerformanceToolsDependency();
         } catch (ArtifactDescriptorException | IOException e) {
             throw new MojoExecutionException(e.getMessage(),e);
@@ -131,7 +135,7 @@ public class ExtendedWarMojo extends WarMojo {
         super.execute();
     }
 
-    private void addCacheFilterToWebXml() throws IOException {
+    private void addFiltersToWebXml() throws IOException {
         File webXml = defaultWebXmlFile;
         if (getWebXml()!=null) {
             webXml = getWebXml();
@@ -140,7 +144,7 @@ public class ExtendedWarMojo extends WarMojo {
         File tempWebXml = new File(getOutputDirectory(), System.currentTimeMillis()+"web.xml");
         try (FileInputStream fileInputStream = new FileInputStream(webXml);
         FileOutputStream fileOutputStream = new FileOutputStream(tempWebXml)) {
-            WebXmlModifier webXmlModifier = new WebXmlModifier(fileInputStream, filterCacheConfig);
+            WebXmlModifier webXmlModifier = new WebXmlModifier(fileInputStream, cacheFilterConfig, compressingFilterConfig);
             webXmlModifier.writeToOutputStream(fileOutputStream);
             setWebXml(tempWebXml);
         }

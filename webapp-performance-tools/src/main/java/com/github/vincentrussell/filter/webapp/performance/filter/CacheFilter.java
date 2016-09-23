@@ -32,12 +32,12 @@ public class CacheFilter implements Filter {
 
     @Override
     public void init(final FilterConfig filterConfig) {
-        shouldProcessImages = getValueFromFilterConfig(filterConfig, ConfigurationProperties.PROCESS_IMAGES,Boolean.TRUE);
-        shouldProcessCss = getValueFromFilterConfig(filterConfig, ConfigurationProperties.PROCESS_CSS,Boolean.TRUE);
-        shouldProcessJs = getValueFromFilterConfig(filterConfig, ConfigurationProperties.PROCESS_JS,Boolean.TRUE);
-        isEnabled = getValueFromFilterConfig(filterConfig, ConfigurationProperties.ENABLED,Boolean.TRUE);
-        exclusions.addAll(getListValueFromFilterConfig(filterConfig, ConfigurationProperties.EXCLUSIONS));
-        final List<String> suppliedExtensions = getListValueFromFilterConfig(filterConfig, ConfigurationProperties.EXTENSIONS);
+        shouldProcessImages = getValueFromFilterConfig(filterConfig, ConfigurationProperties.CACHE_PROCESS_IMAGES,Boolean.TRUE);
+        shouldProcessCss = getValueFromFilterConfig(filterConfig, ConfigurationProperties.CACHE_PROCESS_CSS,Boolean.TRUE);
+        shouldProcessJs = getValueFromFilterConfig(filterConfig, ConfigurationProperties.CACHE_PROCESS_JS,Boolean.TRUE);
+        isEnabled = getValueFromFilterConfig(filterConfig, ConfigurationProperties.CACHE_ENABLED,Boolean.TRUE);
+        exclusions.addAll(getListValueFromFilterConfig(filterConfig, ConfigurationProperties.CACHE_EXCLUSIONS));
+        final List<String> suppliedExtensions = getListValueFromFilterConfig(filterConfig, ConfigurationProperties.CACHE_EXTENSIONS);
 
         if (suppliedExtensions.size() > 0) {
             extensions.addAll(suppliedExtensions);
@@ -46,7 +46,7 @@ public class CacheFilter implements Filter {
         }
     }
 
-    public void setCacheFilterConfig(FilterCacheConfig filterConfig) {
+    public void setCacheFilterConfig(CacheFilterConfig filterConfig) {
         init(filterConfig);
     }
 

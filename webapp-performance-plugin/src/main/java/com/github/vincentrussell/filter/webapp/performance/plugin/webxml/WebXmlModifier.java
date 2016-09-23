@@ -2,9 +2,10 @@ package com.github.vincentrussell.filter.webapp.performance.plugin.webxml;
 
 import com.github.vincentrussell.filter.webapp.performance.ConfigurationProperties;
 import com.github.vincentrussell.filter.webapp.performance.filter.CacheFilter;
-import com.github.vincentrussell.filter.webapp.performance.filter.FilterCacheConfig;
+import com.github.vincentrussell.filter.webapp.performance.filter.CompressingFilterConfig;
+import com.github.vincentrussell.filter.webapp.performance.filter.CacheFilterConfig;
+import com.github.ziplet.filter.compression.CompressingFilter;
 import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -21,10 +22,7 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
@@ -50,88 +48,172 @@ public class WebXmlModifier {
 
     private final InputStream inputStream;
     private final Document document;
-    private final FilterCacheConfig filterCacheConfig;
+    private final CacheFilterConfig cacheFilterConfig;
+    private final CompressingFilterConfig compressingFilterConfig;
 
     public WebXmlModifier(InputStream inputStream) throws IOException {
-        this(inputStream,null);
+        this(inputStream,null,null);
     }
 
-    public WebXmlModifier(InputStream inputStream, FilterCacheConfig filterCacheConfig) throws IOException {
-        this.filterCacheConfig = filterCacheConfig;
+    public WebXmlModifier(InputStream inputStream, CacheFilterConfig cacheFilterConfig, CompressingFilterConfig compressingFilterConfig) throws IOException {
+        this.cacheFilterConfig = cacheFilterConfig;
+        this.compressingFilterConfig = compressingFilterConfig;
         notNull(inputStream,"input stream cannot be null");
         this.inputStream = inputStream;
         try {
             SAXBuilder saxBuilder = new SAXBuilder();
             saxBuilder.setSAXHandlerFactory(FACTORY);
             document = saxBuilder.build(inputStream);
+            validateWebXml();
             addCacheFilter();
+            addCompressingFilter();
         } catch (JDOMException | IllegalStateException | IOException e) {
             throw new IOException(e);
         }
     }
 
-    private void addCacheFilter()  {
-
-        String cacheFilter = "cacheFilter";
-
+    private void validateWebXml() {
         if (document.getRootElement()!=null && !"web-app".equals(document.getRootElement().getName())) {
             throw new IllegalStateException("first web-app child element missing.  This is not a valid web.xml document!");
         }
+    }
+
+    private void addCompressingFilter() {
+
+        if (compressingFilterConfig==null || !compressingFilterConfig.isConfigured()) {
+            return;
+        }
+
+        String filterName = "compressingFilter";
 
         Element rootNode = document.getRootElement();
 
         List<Element> newElementList = new ArrayList<>();
 
-        List<Element> list = rootNode.getChildren("context-param");
+        List<Element> filterMappingChildren = rootNode.getChildren("filter-mapping");
+        List<Element> contextParamChildren = rootNode.getChildren("context-param");
         List<Element> rootChildren = rootNode.getChildren();
-        if (list.size() > 0) {
-            int index = rootChildren.indexOf(list.get(list.size()-1));
-            addElementsAfterIndex(cacheFilter, newElementList, rootChildren, index);
+        if (filterMappingChildren.size() > 0) {
+            int lastFilterMapping = rootChildren.indexOf(filterMappingChildren.get(filterMappingChildren.size()-1));
+            addElementsAfterIndex(newElementList, rootChildren, getCompressingFilterElements(filterName), lastFilterMapping);
+        } else if (contextParamChildren.size() > 0) {
+            int index = rootChildren.indexOf(contextParamChildren.get(contextParamChildren.size()-1));
+            addElementsAfterIndex(newElementList, rootChildren, getCompressingFilterElements(filterName), index);
         } else {
-            addElementsAfterIndex(cacheFilter, newElementList, rootChildren, -1);
+            addElementsAfterIndex(newElementList, rootChildren, getCompressingFilterElements(filterName), -1);
+        }
+        rootChildren.clear();
+        rootChildren.addAll(newElementList);
+    }
+
+    private void addCacheFilter()  {
+
+        if (cacheFilterConfig ==null || !cacheFilterConfig.isConfigured()) {
+            return;
+        }
+
+        String filterName = "cacheFilter";
+
+        Element rootNode = document.getRootElement();
+
+        List<Element> newElementList = new ArrayList<>();
+
+        List<Element> contextParamChildren = rootNode.getChildren("context-param");
+        List<Element> rootChildren = rootNode.getChildren();
+        if (contextParamChildren.size() > 0) {
+            int index = rootChildren.indexOf(contextParamChildren.get(contextParamChildren.size()-1));
+            addElementsAfterIndex(newElementList, rootChildren, getCacheFilterElements(filterName), index);
+        } else {
+            addElementsAfterIndex(newElementList, rootChildren, getCacheFilterElements(filterName), -1);
         }
         rootChildren.clear();
         rootChildren.addAll(newElementList);
 
     }
 
-    private void addElementsAfterIndex(String cacheFilter, List<Element> newElementList, List<Element> rootChildren, int index) {
+    private void addElementsAfterIndex(List<Element> newElementList, List<Element> rootChildren, List<Element> elementsToAdd, int index) {
         int rootChildSize = rootChildren.size();
         int endIndex = index == -1 ? 0 : index + 1;
         newElementList.addAll(rootChildren.subList(0, endIndex));
-        newElementList.addAll(getCacheFilterElements(cacheFilter));
+        newElementList.addAll(elementsToAdd);
         newElementList.addAll(rootChildren.subList(endIndex,rootChildSize));
     }
 
-    private List<Element> getCacheFilterElements(String cacheFilter) {
+
+    private List<Element> getCompressingFilterElements(String filterName) {
+        List<Element> elements = new LinkedList<>();
+        elements.add(element("filter",
+                getCompressingFilterWithInitParams(filterName)));
+
+        for (String urlPattern : compressingFilterConfig.getUrlPatterns()) {
+            elements.add(element("filter-mapping",
+                    element("filter-name",filterName),
+                    element("url-pattern",urlPattern)));
+        }
+
+        return elements;
+
+    }
+
+
+    private List<Element> getCacheFilterElements(String filterName) {
         return Arrays.asList(element("filter",
-                getFilterWithInitParams(cacheFilter)),
+                getCacheFilterWithInitParams(filterName)),
                 element("filter-mapping",
-                        element("filter-name",cacheFilter),
+                        element("filter-name",filterName),
                         element("url-pattern","/*")));
 
     }
 
-    private Element[] getFilterWithInitParams(String cacheFilter) {
+    private Element[] getCacheFilterWithInitParams(String filterName) {
         List<Element> elements = new ArrayList<>();
-        elements.add(element("filter-name",cacheFilter));
+        elements.add(element("filter-name",filterName));
         elements.add(element("filter-class",CacheFilter.class.getName()));
-        if (filterCacheConfig!=null) {
-            setInitParamValue(elements,ConfigurationProperties.PROCESS_CSS,filterCacheConfig.isShouldProcessCss());
-            setInitParamValue(elements, ConfigurationProperties.PROCESS_IMAGES,filterCacheConfig.isShouldProcessImages());
-            setInitParamValue(elements,ConfigurationProperties.PROCESS_JS,filterCacheConfig.isShouldProcessJs());
-            setInitParamValue(elements,ConfigurationProperties.ENABLED,filterCacheConfig.isEnabled());
-            if (filterCacheConfig.getExclusions()!=null && filterCacheConfig.getExclusions().size() >0) {
-                setInitParamValue(elements,ConfigurationProperties.EXCLUSIONS, Joiner.on(ConfigurationProperties.LIST_SEPARATOR).join(filterCacheConfig.getExclusions()));
-            }
-            if (filterCacheConfig.getExtensions()!=null && filterCacheConfig.getExtensions().size() >0) {
-                setInitParamValue(elements,ConfigurationProperties.EXTENSIONS, Joiner.on(ConfigurationProperties.LIST_SEPARATOR).join(filterCacheConfig.getExtensions()));
-            }
+        if (cacheFilterConfig !=null) {
+            setInitParamValue(elements,ConfigurationProperties.CACHE_PROCESS_CSS, cacheFilterConfig.isShouldProcessCss());
+            setInitParamValue(elements, ConfigurationProperties.CACHE_PROCESS_IMAGES, cacheFilterConfig.isShouldProcessImages());
+            setInitParamValue(elements,ConfigurationProperties.CACHE_PROCESS_JS, cacheFilterConfig.isShouldProcessJs());
+            setInitParamValue(elements,ConfigurationProperties.CACHE_ENABLED, cacheFilterConfig.isEnabled());
+            setInitParamValue(elements,ConfigurationProperties.CACHE_EXCLUSIONS, cacheFilterConfig.getExclusions());
+            setInitParamValue(elements,ConfigurationProperties.CACHE_EXTENSIONS, cacheFilterConfig.getExtensions());
         }
         return elements.toArray(new Element[elements.size()]);
     }
 
+    private Element[] getCompressingFilterWithInitParams(String filterName) {
+        List<Element> elements = new ArrayList<>();
+        elements.add(element("filter-name",filterName));
+        elements.add(element("filter-class",CompressingFilter.class.getName()));
+        if (compressingFilterConfig!=null) {
+
+            setInitParamValue(elements, ConfigurationProperties.COMPRESSION_INCLUDE_PATH_PATTERNS, compressingFilterConfig.getIncludePathPatterns());
+            setInitParamValue(elements, ConfigurationProperties.COMPRESSION_EXCLUDE_PATH_PATTERNS, compressingFilterConfig.getExcludePathPatterns());
+            setInitParamValue(elements, ConfigurationProperties.COMPRESSION_INCLUDE_CONTENT_TYPES, compressingFilterConfig.getIncludeContentTypes());
+            setInitParamValue(elements, ConfigurationProperties.COMPRESSION_EXCLUDE_CONTENT_TYPES, compressingFilterConfig.getExcludeContentTypes());
+            setInitParamValue(elements, ConfigurationProperties.COMPRESSION_INCLUDE_USER_AGENT_PATTERNS, compressingFilterConfig.getIncludeUserAgentPatterns());
+            setInitParamValue(elements, ConfigurationProperties.COMPRESSION_EXCLUDE_USER_AGENT_PATTERNS, compressingFilterConfig.getExcludeUserAgentPatterns());
+            setInitParamValue(elements, ConfigurationProperties.COMPRESSION_NO_VARY_HEADER_PATTERNS, compressingFilterConfig.getNoVaryHeaderPatterns());
+            setInitParamValue(elements, ConfigurationProperties.COMPRESSION_COMPRESSION_THRESHOLD, compressingFilterConfig.getCompressionThreshold());
+            setInitParamValue(elements,ConfigurationProperties.COMPRESSION_STATS_ENABLED,compressingFilterConfig.isStatsEnabled());
+            setInitParamValue(elements,ConfigurationProperties.COMPRESSION_DEBUG,compressingFilterConfig.isDebug());
+
+        }
+        return elements.toArray(new Element[elements.size()]);
+    }
+
+    private void setInitParamValue(List<Element> elements, String paramName, Collection<String> collectionValue) {
+        if (collectionValue==null || collectionValue.size() == 0) {
+            return;
+        }
+        elements.add(element("init-param",
+                element("param-name",paramName),
+                element("param-value",Joiner.on(ConfigurationProperties.LIST_SEPARATOR).join(collectionValue))));
+    }
+
     private void setInitParamValue(List<Element> elements, String paramName, Object value) {
+        if (value==null) {
+            return;
+        }
         elements.add(element("init-param",
                 element("param-name",paramName),
                 element("param-value",value.toString())));
