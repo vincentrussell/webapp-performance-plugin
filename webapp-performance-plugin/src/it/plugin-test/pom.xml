@@ -26,6 +26,17 @@
             <version>19.0</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.servlet</artifactId>
+            <version>3.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.github.detro.ghostdriver</groupId>
             <artifactId>phantomjsdriver</artifactId>
             <version>${ghostdriver.version}</version>
@@ -95,6 +106,15 @@
                                 <extension>bat</extension>
                             </extensions>
                         </cacheFilterConfig>
+                        <compressingFilterConfig>
+                            <urlPatterns>
+                                <urlPattern>/rest/*</urlPattern>
+                            </urlPatterns>
+                            <includeContentTypes>
+                                <includeContentType>text/plain</includeContentType>
+                                <includeContentType>text/xml</includeContentType>
+                            </includeContentTypes>
+                        </compressingFilterConfig>
                     </configuration>
                 </plugin>
             </plugins>

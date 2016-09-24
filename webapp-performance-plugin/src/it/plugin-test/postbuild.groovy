@@ -54,7 +54,27 @@ try {
     <filter-name>cacheFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
+  <filter>
+    <filter-name>compressingFilter</filter-name>
+    <filter-class>com.github.ziplet.filter.compression.CompressingFilter</filter-class>
+    <init-param>
+      <param-name>includeContentTypes</param-name>
+      <param-value>text/plain,text/xml</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>compressingFilter</filter-name>
+    <url-pattern>/rest/*</url-pattern>
+  </filter-mapping>
   <display-name>Archetype Created Web Application</display-name>
+  <servlet>
+    <servlet-name>TestServlet</servlet-name>
+    <servlet-class>com.github.vincentrussell.filter.webapp.performance.servlet.TestServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>TestServlet</servlet-name>
+    <url-pattern>/rest/testServlet</url-pattern>
+  </servlet-mapping>
 </web-app>
 """.trim();
 

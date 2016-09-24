@@ -1,12 +1,15 @@
 package com.github.vincentrussell.filter.webapp.performance;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
+import org.apache.http.client.entity.GzipDecompressingEntity;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.ResponseContentEncoding;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
@@ -25,6 +28,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.util.Arrays;
 import java.util.Date;
@@ -137,6 +141,34 @@ public class PhantomTestsIT {
         Date tenYearsFutureDate = new Date(System.currentTimeMillis() + TEN_YEARS_MILLIS);
         int minutes = new Period(new DateTime(resultDate), new DateTime(tenYearsFutureDate)).getMinutes();
         assertTrue(minutes <= 1);
+    }
+
+    @Test
+    public void compressionTestWithAcceptEncodingHeading() throws IOException {
+        CloseableHttpClient client = HttpClientBuilder.create()
+                .build();
+        compressionTest(client,"DecompressingEntity");
+    }
+
+    @Test
+    public void compressionTestWithoutAcceptEncodingHeading() throws IOException {
+        CloseableHttpClient client = HttpClientBuilder.create()
+                .disableContentCompression()
+                .build();
+        compressionTest(client,"ResponseEntityProxy");
+    }
+
+    private void compressionTest(CloseableHttpClient client, String expectedEntityType) throws IOException {
+        HttpGet request = new HttpGet(baseURL + "/rest/testServlet");
+        HttpResponse response = client.execute(request);
+        assertEquals(200,response.getStatusLine().getStatusCode());
+        try (InputStream inputStream = PhantomTestsIT.class.getResourceAsStream("/billOfRights.txt");
+             InputStream resultInputStrem = response.getEntity().getContent()) {
+            assertEquals(expectedEntityType,response.getEntity().getClass().getSimpleName()); //response not compressed
+            String billOfRights = IOUtils.toString(inputStream,"UTF-8");
+            String billOfRights2 = IOUtils.toString(resultInputStrem,"UTF-8");
+            assertEquals(billOfRights,billOfRights2);
+        }
     }
 
 

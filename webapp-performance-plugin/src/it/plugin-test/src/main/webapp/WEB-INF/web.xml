@@ -4,4 +4,15 @@
 
 <web-app>
   <display-name>Archetype Created Web Application</display-name>
+
+  <servlet>
+    <servlet-name>TestServlet</servlet-name>
+    <servlet-class>com.github.vincentrussell.filter.webapp.performance.servlet.TestServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>TestServlet</servlet-name>
+    <url-pattern>/rest/testServlet</url-pattern>
+  </servlet-mapping>
+
 </web-app>
